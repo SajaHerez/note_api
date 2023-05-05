@@ -8,13 +8,7 @@ const { db } = require("./src/util/admin");
 app.use(bodyParser.json());
 // Parse URL-encoded form request body
 app.use(bodyParser.urlencoded({ extended: false }));
-app.get("/home", (req, res, next) => {
-  // res.status(200).send('Welcome to the home page')
 
-  res.status(200).json({
-    message: "Welcome to the home",
-  });
-});
 app.post("/signup", async (req, res) => {
   console.log(JSON.stringify(req.body));
 

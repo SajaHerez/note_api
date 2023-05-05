@@ -223,6 +223,48 @@ app.delete("/deleteNote/:user_id/:note_id", async (req, res) => {
     }
   });
   
+  app.post("/addSubTask/:user_id/:note_id", async (req, res) => {
+    const subTaskTitle = req.body.title;
+    const subTaskCreatedAt = req.body.createdAt;
+    const subTaskCompletedAt = req.body.completedAt;
+    const subTaskIsDone = JSON.parse(req.body.isDone);
+    const subTaskIsCancelled = JSON.parse(req.body.isCancelled);
+  
+    const user_id = req.params.user_id;
+    const note_id = req.params.note_id;
+  
+    if (subTaskTitle && subTaskCreatedAt && user_id) {
+      let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data().task_list;
+  
+      const noteIndex = taskList.findIndex((note) => note.id == note_id);
+  
+      if (noteIndex !== -1) {
+        const subTaskId = taskList[noteIndex].SubTaskList.length + 1;
+  
+        taskList[noteIndex].SubTaskList.push({
+          createdAt: subTaskCreatedAt,
+          isCancelled: subTaskIsCancelled,
+          completedAt: subTaskCompletedAt,
+          id: subTaskId,
+          title: subTaskTitle,
+          isDone: subTaskIsDone,
+        });
+  
+        await db.collection("notes").doc(`${user_id}`).update({
+          task_list: JSON.parse(JSON.stringify(taskList)),
+        });
+  
+        res.status(200).json({
+          code: 200,
+          message: "subtask added successfully",
+        });
+      } else {
+        res.status(400).json({ code: 400, message: "note not found" });
+      }
+    } else {
+      res.status(400).json({ code: 400, message: "one or more fields are empty" });
+    }
+  });
   
 
 

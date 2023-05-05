@@ -256,7 +256,7 @@ app.delete("/deleteNote/:user_id/:note_id", async (req, res) => {
   
         res.status(200).json({
           code: 200,
-          message: "subtask added successfully",
+          message: "sub task added successfully",
         });
       } else {
         res.status(400).json({ code: 400, message: "note not found" });
@@ -304,10 +304,10 @@ app.delete("/deleteNote/:user_id/:note_id", async (req, res) => {
 
         res.status(200).json({
           code: 200,
-          message: "subtask updated successfully",
+          message: "sub task updated successfully",
         });
       } else {
-        res.status(400).json({ code: 400, message: "subtask not found" });
+        res.status(400).json({ code: 400, message: "sub task not found" });
       }
     } else {
       res.status(400).json({ code: 400, message: "note not found" });
@@ -318,6 +318,37 @@ app.delete("/deleteNote/:user_id/:note_id", async (req, res) => {
 });
  
 
+
+app.delete("/deleteSubTask/:user_id/:note_id/:subtask_id", async (req, res) => {
+    const user_id = req.params.user_id;
+    const note_id = req.params.note_id;
+    const subtask_id = req.params.subtask_id;
+  
+    let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data().task_list;
+    const noteIndex = taskList.findIndex((note) => note.id === +note_id);
+  
+    if (noteIndex !== -1) {
+      let subTaskIndex = taskList[noteIndex].SubTaskList.findIndex((subTask) => subTask.id === +subtask_id);
+  
+      if (subTaskIndex !== -1) {
+        taskList[noteIndex].SubTaskList.splice(subTaskIndex, 1);
+  
+        await db.collection("notes").doc(`${user_id}`).update({
+          task_list: JSON.parse(JSON.stringify(taskList)),
+        });
+  
+        res.status(200).json({
+          code: 200,
+          message: "sub task deleted successfully",
+        });
+      } else {
+        res.status(400).json({ code: 400, message: "sub task not found" });
+      }
+    } else {
+      res.status(400).json({ code: 400, message: "note not found" });
+    }
+  });
+  
 
 
 module.exports = app;

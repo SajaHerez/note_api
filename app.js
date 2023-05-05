@@ -343,6 +343,9 @@ app.delete("/deleteSubTask/:user_id/:note_id/:subtask_id", async (req, res) => {
     }
   });
   
+app.get('/logout',(req, res) => {
+    res.status(200).json({code: 200, message: "logout successfully"})
+})
 
 
 module.exports = app;

@@ -3,7 +3,7 @@ const { db } = require("../util/admin");
 exports.notes = async (req, res) => {
     const noteRef = db.collection('notes');
     try{
-        noteRef.get().then((snapshot) => {
+      await  noteRef.get().then((snapshot) => {
             const data = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),

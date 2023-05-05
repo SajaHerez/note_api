@@ -4,11 +4,17 @@ var bodyParser = require('body-parser');
 const app = express();
 const { db } = require('./src/util/admin');
 
-// // Parse JSON request body
+// Parse JSON request body
 app.use(bodyParser.json())
  // Parse URL-encoded form request body
 app.use(bodyParser.urlencoded({ extended: false }))
+app.get('/home', (req, res, next) => {
+    // res.status(200).send('Welcome to the home page')
 
+    res.status(200).json({
+        message: "Welcome to the home"
+    });
+})
 app.post("/signup",async (req, res) => {
 
      console.log(JSON.stringify(req.body))
@@ -35,6 +41,11 @@ app.post("/signup",async (req, res) => {
             name:name,
             password: passowrd
           });
+           notes.doc(`${user_id}`).set({
+            task_list:[],
+            user_id:user_id
+           });
+          
           res
             .json({ code: 200, message: "account successfully created" });
         }
@@ -55,7 +66,6 @@ app.post("/signin",async (req, res) => {
    const email= await req.body.email
    const passowrd=await req.body.password
    if(email && passowrd){
-     let us=[]
        let users =  await db.collection("users").where("email", "==", email).get();
         if(users.docs.length > 0){
        for(const user of users.docs ){
@@ -91,23 +101,33 @@ app.post("/signin",async (req, res) => {
 
 });
 
-
-app.post('')
-
-
-
-
-
-
-const { notes } = require("./src/models/note");
-app.get("/notes", notes);
-
-app.post("/notes", async (req, res) => {
-  let docRef = db.collection("notes").set();
-  await docRef.set({
-    email: req.body.user.email,
-    password: req.body.user.password,
-  });
-  res.json({ message: "done" });
+app.get("/notes/:user_id", async (req, res) => {
+       const user_id=req.params['user_id']
+    const noteRef =  (await db.collection('notes').doc(`${user_id}`).get()).data();
+    if(noteRef){
+       res.status(200).json(noteRef);  
+    }else{
+        res.status(404).json({ code: 404, message: "data not found" }); 
+    }
 });
 
+app.post("/createNote/:user_id",async (req, res) => {
+    const user_id=req.params['user_id']
+      let taskList = (await db.collection('notes').doc(`${user_id}`).get()).data().task_list;
+      console.log(docRef)
+      await taskList.add({
+       
+      });
+     
+    }
+      )
+// app.post("/notes", async (req, res) => {
+//   let docRef = db.collection("notes").set();
+//   await docRef.set({
+//     email: req.body.user.email,
+//     password: req.body.user.password,
+//   });
+//   res.json({ message: "done" });
+// });
+
+module.exports = app

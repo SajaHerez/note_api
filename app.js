@@ -149,13 +149,82 @@ app.post("/createNote/:user_id", async (req, res) => {
 
 
 
-// app.post("/notes", async (req, res) => {
-//   let docRef = db.collection("notes").set();
-//   await docRef.set({
-//     email: req.body.user.email,
-//     password: req.body.user.password,
-//   });
-//   res.json({ message: "done" });
-// });
+
+
+app.delete("/deleteNote/:user_id/:note_id", async (req, res) => {
+    const user_id = req.params.user_id;
+    const note_id = req.params.note_id;
+    
+    try {
+      // Get the current task list for the user
+      const snapshot = await db.collection("notes").doc(user_id).get();
+      const taskList = snapshot.data().task_list;
+  
+      // Find the note to be deleted and remove it from the task list
+      const noteIndex = taskList.findIndex((note) => note.id === +note_id);
+      if (noteIndex === -1) {
+        return res
+          .status(404)
+          .json({ code: 404, message: "Note not found for the given user" });
+      }
+      taskList.splice(noteIndex, 1);
+  
+      // Update the task list in Firestore
+      await db.collection("notes").doc(user_id).update({ task_list: taskList });
+  
+      // Send response
+      res
+        .status(200)
+        .json({ code: 200, message: "Note deleted successfully" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ code: 500, message: "Internal server error" });
+    }
+  });
+  
+
+  app.put("/updateNote/:user_id/:note_id", async (req, res) => {
+    const user_id = req.params.user_id
+    const note_id = req.params.note_id
+    const { title, createdAt, completedAt, isDone, isCancelled } = req.body;
+  
+    if (title && createdAt && user_id) {
+      const taskList = (await db.collection("notes").doc(`${user_id}`).get()).data().task_list;
+  
+      const noteIndex = taskList.findIndex((note) => note.id === Number(note_id));
+  
+      if (noteIndex !== -1) {
+        taskList[noteIndex] = {
+          createdAt: createdAt,
+          isCancelled: isCancelled,
+          completedAt: completedAt,
+          id: Number(note_id),
+          title: title,
+          isDone: isDone,
+          SubTaskList: taskList[noteIndex].SubTaskList,
+        };
+  
+        await db.collection("notes").doc(`${user_id}`).update({
+          task_list: taskList,
+        });
+  
+        res.status(200).json({
+          code: 200,
+          message: "note updated successfully",
+        });
+      } else {
+        res.status(404).json({
+          code: 404,
+          message: "note not found",
+        });
+      }
+    } else {
+      res.status(400).json({ code: 400, message: "one or more fields are empty" });
+    }
+  });
+  
+  
+
+
 
 module.exports = app;

@@ -46,6 +46,7 @@ app.post("/signup", async (req, res) => {
 app.post("/signin", async (req, res) => {
   const email = await req.body.email;
   const passowrd = await req.body.password;
+  
   if (email && passowrd) {
     let users = await db.collection("users").where("email", "==", email).get();
     if (users.docs.length > 0) {
@@ -100,7 +101,8 @@ app.post("/createNote/:user_id", async (req, res) => {
   const isDone = JSON.parse(req.body.isDone);
   const isCancelled = JSON.parse(req.body.isCancelled);
   const user_id = req.params["user_id"];
-  if (title && createdAt && user_id) {
+  if(user_id){
+  if (title && createdAt ) {
     const userRef = db.collection("notes").doc(`${user_id}`);
     try {
       await db.runTransaction(async (transaction) => {
@@ -139,131 +141,164 @@ app.post("/createNote/:user_id", async (req, res) => {
       .status(400)
       .json({ code: 400, message: "one or more fields are empty" });
   }
+  }else{
+    res
+    .status(401)
+    .json({
+      code: 401,
+      message: "unauthorized access is denied due to invalid credentials",
+    });
+  }
 });
 
-
-
-
-
 app.delete("/deleteNote/:user_id/:note_id", async (req, res) => {
-    const user_id = req.params.user_id;
-    const note_id = req.params.note_id;
-    
-    try {
-      // Get the current task list for the user
-      const snapshot = await db.collection("notes").doc(user_id).get();
-      const taskList = snapshot.data().task_list;
-  
-      // Find the note to be deleted and remove it from the task list
-      const noteIndex = taskList.findIndex((note) => note.id === +note_id);
-      if (noteIndex === -1) {
-        return res
-          .status(404)
-          .json({ code: 404, message: "Note not found for the given user" });
-      }
-      taskList.splice(noteIndex, 1);
-  
-      // Update the task list in Firestore
-      await db.collection("notes").doc(user_id).update({ task_list: taskList });
-  
-      // Send response
-      res
-        .status(200)
-        .json({ code: 200, message: "Note deleted successfully" });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ code: 500, message: "Internal server error" });
-    }
-  });
-  
+  const user_id = req.params.user_id;
+  const note_id = req.params.note_id;
+  if(user_id){
+if(note_id){
+  try {
+    // Get the current task list for the user
+    const snapshot = await db.collection("notes").doc(user_id).get();
+    const taskList = snapshot.data().task_list;
 
-  app.put("/updateNote/:user_id/:note_id", async (req, res) => {
-    const user_id = req.params.user_id
-    const note_id = req.params.note_id
-    const { title, createdAt, completedAt, isDone, isCancelled } = req.body;
-  
-    if (title && createdAt && user_id) {
-      const taskList = (await db.collection("notes").doc(`${user_id}`).get()).data().task_list;
-  
-      const noteIndex = taskList.findIndex((note) => note.id === Number(note_id));
-  
-      if (noteIndex !== -1) {
-        taskList[noteIndex] = {
-          createdAt: createdAt,
-          isCancelled: isCancelled,
-          completedAt: completedAt,
-          id: Number(note_id),
-          title: title,
-          isDone: isDone,
-          SubTaskList: taskList[noteIndex].SubTaskList,
-        };
-  
-        await db.collection("notes").doc(`${user_id}`).update({
-          task_list: taskList,
-        });
-  
-        res.status(200).json({
-          code: 200,
-          message: "note updated successfully",
-        });
-      } else {
-        res.status(404).json({
-          code: 404,
-          message: "note not found",
-        });
-      }
-    } else {
-      res.status(400).json({ code: 400, message: "one or more fields are empty" });
+    // Find the note to be deleted and remove it from the task list
+    const noteIndex = taskList.findIndex((note) => note.id === +note_id);
+    if (noteIndex === -1) {
+      return res
+        .status(404)
+        .json({ code: 404, message: "Note not found for the given user" });
     }
-  });
-  
-  app.post("/addSubTask/:user_id/:note_id", async (req, res) => {
-    const subTaskTitle = req.body.title;
-    const subTaskCreatedAt = req.body.createdAt;
-    const subTaskCompletedAt = req.body.completedAt;
-    const subTaskIsDone = JSON.parse(req.body.isDone);
-    const subTaskIsCancelled = JSON.parse(req.body.isCancelled);
-  
-    const user_id = req.params.user_id;
-    const note_id = req.params.note_id;
-  
-    if (subTaskTitle && subTaskCreatedAt && user_id) {
-      let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data().task_list;
-  
-      const noteIndex = taskList.findIndex((note) => note.id == note_id);
-  
-      if (noteIndex !== -1) {
-        const subTaskId = taskList[noteIndex].SubTaskList.length + 1;
-  
-        taskList[noteIndex].SubTaskList.push({
-          createdAt: subTaskCreatedAt,
-          isCancelled: subTaskIsCancelled,
-          completedAt: subTaskCompletedAt,
-          id: subTaskId,
-          title: subTaskTitle,
-          isDone: subTaskIsDone,
-        });
-  
-        await db.collection("notes").doc(`${user_id}`).update({
+    taskList.splice(noteIndex, 1);
+
+    // Update the task list in Firestore
+    await db.collection("notes").doc(user_id).update({ task_list: taskList });
+
+    // Send response
+    res.status(200).json({ code: 200, message: "Note deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ code: 500, message: "Internal server error" });
+  }
+}else{
+    res
+    .status(401)
+    .json({
+      code: 401,
+      message: "unauthorized access is denied due to invalid credentials",
+    });
+}}
+});
+
+app.put("/updateNote/:user_id/:note_id", async (req, res) => {
+  const user_id = req.params.user_id;
+  const note_id = req.params.note_id;
+  const { title, createdAt, completedAt, isDone, isCancelled } = req.body;
+  if(user_id){
+  if (title && createdAt ) {
+    const taskList = (
+      await db.collection("notes").doc(`${user_id}`).get()
+    ).data().task_list;
+
+    const noteIndex = taskList.findIndex((note) => note.id === Number(note_id));
+
+    if (noteIndex !== -1) {
+      taskList[noteIndex] = {
+        createdAt: createdAt,
+        isCancelled: isCancelled,
+        completedAt: completedAt,
+        id: Number(note_id),
+        title: title,
+        isDone: isDone,
+        SubTaskList: taskList[noteIndex].SubTaskList,
+      };
+
+      await db.collection("notes").doc(`${user_id}`).update({
+        task_list: taskList,
+      });
+
+      res.status(200).json({
+        code: 200,
+        message: "note updated successfully",
+      });
+    } else {
+      res.status(404).json({
+        code: 404,
+        message: "note not found",
+      });
+    }
+  } else {
+    res
+      .status(400)
+      .json({ code: 400, message: "one or more fields are empty" });
+  }
+}else{
+    res
+    .status(401)
+    .json({
+      code: 401,
+      message: "unauthorized access is denied due to invalid credentials",
+    });
+}
+});
+
+app.post("/addSubTask/:user_id/:note_id", async (req, res) => {
+  const subTaskTitle = req.body.title;
+  const subTaskCreatedAt = req.body.createdAt;
+  const subTaskCompletedAt = req.body.completedAt;
+  const subTaskIsDone = JSON.parse(req.body.isDone);
+  const subTaskIsCancelled = JSON.parse(req.body.isCancelled);
+
+  const user_id = req.params.user_id;
+  const note_id = req.params.note_id;
+if(user_id){
+  if (subTaskTitle && subTaskCreatedAt) {
+    let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
+      .task_list;
+
+    const noteIndex = taskList.findIndex((note) => note.id == note_id);
+
+    if (noteIndex !== -1) {
+      const subTaskId = taskList[noteIndex].SubTaskList.length + 1;
+
+      taskList[noteIndex].SubTaskList.push({
+        createdAt: subTaskCreatedAt,
+        isCancelled: subTaskIsCancelled,
+        completedAt: subTaskCompletedAt,
+        id: subTaskId,
+        title: subTaskTitle,
+        isDone: subTaskIsDone,
+      });
+
+      await db
+        .collection("notes")
+        .doc(`${user_id}`)
+        .update({
           task_list: JSON.parse(JSON.stringify(taskList)),
         });
-  
-        res.status(200).json({
-          code: 200,
-          message: "sub task added successfully",
-        });
-      } else {
-        res.status(400).json({ code: 400, message: "note not found" });
-      }
+
+      res.status(200).json({
+        code: 200,
+        message: "sub task added successfully",
+      });
     } else {
-      res.status(400).json({ code: 400, message: "one or more fields are empty" });
+      res.status(400).json({ code: 400, message: "note not found" });
     }
-  });
+  } else {
+    res
+      .status(400)
+      .json({ code: 400, message: "one or more fields are empty" });
+  }
+}else{
+    res
+    .status(401)
+    .json({
+      code: 401,
+      message: "unauthorized access is denied due to invalid credentials",
+    });
+}
+});
 
-
-
-
- app.put("/updateSubTask/:user_id/:note_id/:subtask_id", async (req, res) => {
+app.put("/updateSubTask/:user_id/:note_id/:subtask_id", async (req, res) => {
   const subTaskTitle = req.body.title;
   const subTaskCreatedAt = req.body.createdAt;
   const subTaskCompletedAt = req.body.completedAt;
@@ -273,79 +308,241 @@ app.delete("/deleteNote/:user_id/:note_id", async (req, res) => {
   const user_id = req.params.user_id;
   const note_id = req.params.note_id;
   const subtask_id = req.params.subtask_id;
+  if (user_id) {
+    if (subTaskTitle && subTaskCreatedAt && note_id && subtask_id) {
+      let taskList = (
+        await db.collection("notes").doc(`${user_id}`).get()
+      ).data().task_list;
 
-  if (subTaskTitle && subTaskCreatedAt && user_id && note_id  && subtask_id) {
-    let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data().task_list;
+      const noteIndex = taskList.findIndex((note) => note.id === +note_id);
 
-    const noteIndex = taskList.findIndex((note) => note.id === +note_id);
+      if (noteIndex !== -1) {
+        const subTaskIndex = taskList[noteIndex].SubTaskList.findIndex(
+          (subtask) => subtask.id === +subtask_id
+        );
 
-    if (noteIndex !== -1) {
-      const subTaskIndex = taskList[noteIndex].SubTaskList.findIndex((subtask) => subtask.id === +subtask_id);
+        if (subTaskIndex !== -1) {
+          taskList[noteIndex].SubTaskList[subTaskIndex] = {
+            createdAt: subTaskCreatedAt,
+            isCancelled: subTaskIsCancelled,
+            completedAt: subTaskCompletedAt,
+            id: +subtask_id,
+            title: subTaskTitle,
+            isDone: subTaskIsDone,
+          };
 
-      if (subTaskIndex !== -1) {
-        taskList[noteIndex].SubTaskList[subTaskIndex] = {
-          createdAt: subTaskCreatedAt,
-          isCancelled: subTaskIsCancelled,
-          completedAt: subTaskCompletedAt,
-          id: +subtask_id,
-          title: subTaskTitle,
-          isDone: subTaskIsDone,
-        };
+          await db
+            .collection("notes")
+            .doc(`${user_id}`)
+            .update({
+              task_list: JSON.parse(JSON.stringify(taskList)),
+            });
 
-        await db.collection("notes").doc(`${user_id}`).update({
-          task_list: JSON.parse(JSON.stringify(taskList)),
-        });
-
-        res.status(200).json({
-          code: 200,
-          message: "sub task updated successfully",
-        });
+          res.status(200).json({
+            code: 200,
+            message: "sub task updated successfully",
+          });
+        } else {
+          res.status(400).json({ code: 400, message: "sub task not found" });
+        }
       } else {
-        res.status(400).json({ code: 400, message: "sub task not found" });
+        res.status(400).json({ code: 400, message: "note not found" });
       }
     } else {
-      res.status(400).json({ code: 400, message: "note not found" });
+      res
+        .status(400)
+        .json({ code: 400, message: "one or more fields are empty" });
     }
-  } else {
-    res.status(400).json({ code: 400, message: "one or more fields are empty" });
+  }else{
+    res
+      .status(401)
+      .json({
+        code: 401,
+        message: "unauthorized access is denied due to invalid credentials",
+      });
   }
 });
- 
-
 
 app.delete("/deleteSubTask/:user_id/:note_id/:subtask_id", async (req, res) => {
-    const user_id = req.params.user_id;
-    const note_id = req.params.note_id;
-    const subtask_id = req.params.subtask_id;
-  
-    let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data().task_list;
-    const noteIndex = taskList.findIndex((note) => note.id === +note_id);
-  
-    if (noteIndex !== -1) {
-      let subTaskIndex = taskList[noteIndex].SubTaskList.findIndex((subTask) => subTask.id === +subtask_id);
-  
-      if (subTaskIndex !== -1) {
-        taskList[noteIndex].SubTaskList.splice(subTaskIndex, 1);
-  
-        await db.collection("notes").doc(`${user_id}`).update({
+  const user_id = req.params.user_id;
+  const note_id = req.params.note_id;
+  const subtask_id = req.params.subtask_id;
+if(user_id){
+  let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
+    .task_list;
+  const noteIndex = taskList.findIndex((note) => note.id === +note_id);
+ 
+  if (noteIndex !== -1) {
+    let subTaskIndex = taskList[noteIndex].SubTaskList.findIndex(
+      (subTask) => subTask.id === +subtask_id
+    );
+
+    if (subTaskIndex !== -1) {
+      taskList[noteIndex].SubTaskList.splice(subTaskIndex, 1);
+
+      await db
+        .collection("notes")
+        .doc(`${user_id}`)
+        .update({
           task_list: JSON.parse(JSON.stringify(taskList)),
         });
-  
-        res.status(200).json({
-          code: 200,
-          message: "sub task deleted successfully",
-        });
-      } else {
-        res.status(400).json({ code: 400, message: "sub task not found" });
-      }
+
+      res.status(200).json({
+        code: 200,
+        message: "sub task deleted successfully",
+      });
     } else {
-      res.status(400).json({ code: 400, message: "note not found" });
+      res.status(400).json({ code: 400, message: "sub task not found" });
     }
-  });
-  
-app.get('/logout',(req, res) => {
-    res.status(200).json({code: 200, message: "logout successfully"})
+  } else {
+    res.status(400).json({ code: 400, message: "note not found" });
+  }
+}else{
+    res
+    .status(401)
+    .json({
+      code: 401,
+      message: "unauthorized access is denied due to invalid credentials",
+    }); 
+}
+});
+
+
+app.get("/percentage/completedTask/:user_id", async (req, res) => {
+  const user_id = req.params.user_id;
+  if (user_id) {
+    let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
+      .task_list;
+      var percentage=0;
+      let sum = 0;
+      let counterOfCancelledNote=0;
+    taskList.forEach((note, index) => {
+      
+      if (!note.isCancelled) {
+        if (note.isDone) {
+            sum += 1;
+        } else {
+          const SubTaskList = note.SubTaskList;
+         let subSum = 0;
+          let counterOfCancelledSubNote=0;
+          SubTaskList.forEach((subNote, index) => {
+            if(!note.isCancelled){
+            if (subNote.isDone) {
+                subSum += 1;
+            }
+        }else{
+           ++counterOfCancelledSubNote
+        }
+          });
+            
+            sum+= subSum/(SubTaskList.length-counterOfCancelledSubNote)
+        }
+      }else{
+        ++counterOfCancelledNote
+      }
+          
+    });
+    percentage=sum/(taskList.length-counterOfCancelledNote)
+    res
+      .status(200)
+      .json({
+        percentage: percentage,
+       
+      });
+
+  } else {
+    res
+      .status(401)
+      .json({
+        code: 401,
+        message: "unauthorized access is denied due to invalid credentials",
+      });
+  }
+});
+
+
+app.post("/percentage/dailyTask/:user_id",async(req,res)=>{
+    const todayDate=req.body.date
+    const user_id = req.params.user_id;
+    if (user_id) {
+        if(todayDate){
+      let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
+        .task_list;
+        var percentage=0;
+        let sum = 0;
+        let counterOfCancelledNote=0;
+
+        taskList.forEach((note, index) => {
+            if(note.createdAt.substring(0,10) === todayDate){
+                if (!note.isCancelled) {
+                    if (note.isDone) {
+                        sum += 1;
+                    } else {
+                      const SubTaskList = note.SubTaskList;
+                     let subSum = 0;
+                      let counterOfCancelledSubNote=0;
+                      SubTaskList.forEach((subNote, index) => {
+                        if(!note.isCancelled){
+                        if (subNote.isDone) {
+                            subSum += 1;
+                        }
+                    }else{
+                       ++counterOfCancelledSubNote
+                    }
+                      });
+                        
+                        sum+= subSum/(SubTaskList.length-counterOfCancelledSubNote)
+                    }
+                  }else{
+                    ++counterOfCancelledNote
+                  }
+            }
+        })
+
+        percentage=sum/(taskList.length-counterOfCancelledNote)
+        res
+          .status(200)
+          .json({
+            percentage: percentage,
+           
+          });
+
+
+}else{
+    res.status(400).json({ code: 400, message: "date is empty" });
+}
+
+
+    }
+        else{
+            res
+            .status(401)
+            .json({
+              code: 401,
+              message: "unauthorized access is denied due to invalid credentials",
+            });
+        }
+
+
+
 })
 
+
+
+
+
+app.get("/logout/:user_id", (req, res) => {
+  const user_id = req.params.user_id;
+  if (user_id) {
+    res.status(200).json({ code: 200, message: "logout successfully" });
+  } else {
+    res
+      .status(401)
+      .json({
+        code: 401,
+        message: "unauthorized access is denied due to invalid credentials",
+      });
+  }
+});
 
 module.exports = app;

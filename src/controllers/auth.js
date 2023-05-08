@@ -1,8 +1,7 @@
 
 const { db } = require("./../configurations/admin");
+
 const singup= async (req, res) => {
-    console.log(JSON.stringify(req.body));
-  
     const email = await req.body.email;
     const passowrd = await req.body.password;
     const name = await req.body.name;

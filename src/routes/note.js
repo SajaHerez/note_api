@@ -3,10 +3,10 @@ const { noteController } = require('./../controllers')
 
 const router = Router()
 
-router.post('/notes/createNote/:user_id', noteController.createNote)
-    .get('/notes/:user_id', noteController.getNotes)
-    .delete('/notes/deleteNote/:user_id/:note_id',noteController.daleteNote)
-    .put('/notes/updateNote/:user_id/:note_id',noteController.updateNote);
+router.post('/createNote/:user_id', noteController.createNote)
+    .get('/:user_id', noteController.getNotes)
+    .delete('/deleteNote/:user_id/:note_id',noteController.daleteNote)
+    .put('/updateNote/:user_id/:note_id',noteController.updateNote);
 
 
 module.exports = router

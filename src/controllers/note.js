@@ -3,14 +3,19 @@ const { db } = require("./../configurations/admin");
 const getNotes= async (req, res) => {
     const user_id = req.params["user_id"];
     if (user_id) {
-      const noteRef = (
+      try {
+        const noteRef = (
         await db.collection("notes").doc(`${user_id}`).get()
       ).data();
       if (noteRef) {
         res.status(200).json(noteRef);
       } else {
         res.status(404).json({ code: 404, message: "data not found" });
+      } 
+      } catch (error) {
+        res.status(500).json({ code: 500, message: "Server error" });
       }
+     
     } else {
       res.status(404).json({ code: 404, message: "data not found" });
     }
@@ -26,6 +31,7 @@ const getNotes= async (req, res) => {
     const user_id = req.params["user_id"];
     if(user_id){
     if (title && createdAt ) {
+      
       const userRef = db.collection("notes").doc(`${user_id}`);
       try {
         await db.runTransaction(async (transaction) => {
@@ -121,37 +127,43 @@ const updateNote= async (req, res) => {
     const { title, createdAt, completedAt, isDone, isCancelled } = req.body;
     if(user_id){
     if (title && createdAt ) {
-      const taskList = (
-        await db.collection("notes").doc(`${user_id}`).get()
-      ).data().task_list;
-  
-      const noteIndex = taskList.findIndex((note) => note.id === Number(note_id));
-  
-      if (noteIndex !== -1) {
-        taskList[noteIndex] = {
-          createdAt: createdAt,
-          isCancelled: isCancelled,
-          completedAt: completedAt,
-          id: Number(note_id),
-          title: title,
-          isDone: isDone,
-          SubTaskList: taskList[noteIndex].SubTaskList,
-        };
-  
-        await db.collection("notes").doc(`${user_id}`).update({
-          task_list: taskList,
-        });
-  
-        res.status(200).json({
-          code: 200,
-          message: "note updated successfully",
-        });
-      } else {
-        res.status(404).json({
-          code: 404,
-          message: "note not found",
-        });
-      }
+   try {
+    
+    const taskList = (
+      await db.collection("notes").doc(`${user_id}`).get()
+    ).data().task_list;
+
+    const noteIndex = taskList.findIndex((note) => note.id === Number(note_id));
+
+    if (noteIndex !== -1) {
+      taskList[noteIndex] = {
+        createdAt: createdAt,
+        isCancelled: isCancelled,
+        completedAt: completedAt,
+        id: Number(note_id),
+        title: title,
+        isDone: isDone,
+        SubTaskList: taskList[noteIndex].SubTaskList,
+      };
+
+      await db.collection("notes").doc(`${user_id}`).update({
+        task_list: taskList,
+      });
+
+      res.status(200).json({
+        code: 200,
+        message: "note updated successfully",
+      });
+    } else {
+      res.status(404).json({
+        code: 404,
+        message: "note not found",
+      });
+    }
+   } catch (error) {
+    res.status(500).json({ code: 500, message: "Internal server error" });
+   }
+
     } else {
       res
         .status(400)

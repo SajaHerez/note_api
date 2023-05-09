@@ -11,7 +11,8 @@ const addSubNote=async (req, res) => {
     const note_id = req.params.note_id;
   if(user_id){
     if (subTaskTitle && subTaskCreatedAt) {
-      let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
+      try {
+         let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
         .task_list;
   
       const noteIndex = taskList.findIndex((note) => note.id == note_id);
@@ -42,6 +43,13 @@ const addSubNote=async (req, res) => {
       } else {
         res.status(400).json({ code: 400, message: "note not found" });
       }
+      } catch (error) {
+        res.status(500).json({
+          code: 500,
+          message: "Internal server error",
+        });
+      }
+     
     } else {
       res
         .status(400)
@@ -70,7 +78,8 @@ const addSubNote=async (req, res) => {
     const subtask_id = req.params.subtask_id;
     if (user_id) {
       if (subTaskTitle && subTaskCreatedAt && note_id && subtask_id) {
-        let taskList = (
+        try {
+            let taskList = (
           await db.collection("notes").doc(`${user_id}`).get()
         ).data().task_list;
   
@@ -108,6 +117,13 @@ const addSubNote=async (req, res) => {
         } else {
           res.status(400).json({ code: 400, message: "note not found" });
         }
+        } catch (error) {
+          res.status(500).json({
+            code: 500,
+            message: "Internal server error",
+          });
+        }
+      
       } else {
         res
           .status(400)
@@ -128,7 +144,8 @@ const addSubNote=async (req, res) => {
     const note_id = req.params.note_id;
     const subtask_id = req.params.subtask_id;
   if(user_id){
-    let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
+    try {
+     let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
       .task_list;
     const noteIndex = taskList.findIndex((note) => note.id === +note_id);
    
@@ -156,7 +173,14 @@ const addSubNote=async (req, res) => {
       }
     } else {
       res.status(400).json({ code: 400, message: "note not found" });
+    } 
+    } catch (error) {
+      res.status(500).json({
+        code: 500,
+        message: "Internal server error",
+      });
     }
+    
   }else{
       res
       .status(401)

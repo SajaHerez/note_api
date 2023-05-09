@@ -4,7 +4,8 @@ const { db } = require("./../configurations/admin");
 const completedNote =async (req, res) => {
     const user_id = req.params.user_id;
     if (user_id) {
-      let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
+      try {
+        let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
         .task_list;
         var percentage=0;
         let sum = 0;
@@ -42,6 +43,11 @@ const completedNote =async (req, res) => {
           percentage: percentage,
          
         });
+      } catch (error) {
+        res.status(500).json({ code: 500, message: "Server error" });
+
+      }
+      
   
     } else {
       res
@@ -60,7 +66,8 @@ const perceDailyNote =async(req,res)=>{
     const user_id = req.params.user_id;
     if (user_id) {
         if(todayDate){
-      let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
+          try {
+         let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
         .task_list;
         var percentage=0;
         let sum = 0;
@@ -100,6 +107,11 @@ const perceDailyNote =async(req,res)=>{
             percentage: percentage,
            
           });
+          } catch (error) {
+            res.status(500).json({ code: 500, message: "Server error" });
+    
+          }
+     
 
 
 }else{

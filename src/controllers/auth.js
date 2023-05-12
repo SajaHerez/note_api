@@ -1,5 +1,6 @@
 
 const { db } = require("./../configurations/admin");
+const { v4: uuidv4 } = require('uuid');
 
 const singup= async (req, res) => {
     const email = await req.body.email;
@@ -14,7 +15,7 @@ const singup= async (req, res) => {
       if (user.docs.length > 0) {
         res.json({ code: 400, message: "email already in use" });
       } else {
-        user_id = ++(await users.get()).docs.length;
+        const userId = uuidv4();
         console.log(user_id);
         await users.add({
           email: email,

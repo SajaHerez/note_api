@@ -1,5 +1,5 @@
 const { db } = require("./../configurations/admin");
-
+const { v4: uuidv4 } = require('uuid');
 const getNotes= async (req, res) => {
     const user_id = req.params["user_id"];
     if (user_id) {
@@ -39,12 +39,12 @@ const getNotes= async (req, res) => {
   
           const taskList = doc.get("task_list") || [];
   
-          const note_id = taskList.length + 1;
+          const noteId = uuidv4();
           const note = {
             createdAt: createdAt,
             isCancelled: isCancelled,
             completedAt: completedAt,
-            id: note_id,
+            id: noteId,
             title: title,
             isDone: isDone,
             SubTaskList: [],
@@ -93,8 +93,8 @@ const getNotes= async (req, res) => {
       const taskList = snapshot.data().task_list;
   
       // Find the note to be deleted and remove it from the task list
-      const noteIndex = taskList.findIndex((note) => note.id === +note_id);
-      if (noteIndex === -1) {
+      const noteIndex = taskList.findIndex((note) => note.id === note_id);
+      if (noteIndex == -1) {
         return res
           .status(404)
           .json({ code: 404, message: "Note not found for the given user" });
@@ -132,15 +132,15 @@ const updateNote= async (req, res) => {
     const taskList = (
       await db.collection("notes").doc(`${user_id}`).get()
     ).data().task_list;
-
-    const noteIndex = taskList.findIndex((note) => note.id === Number(note_id));
-
+    console.log(taskList[2].id)
+    var noteIndex = taskList.findIndex((note) => note.id === note_id);
+    console.log(noteIndex)
     if (noteIndex !== -1) {
       taskList[noteIndex] = {
         createdAt: createdAt,
         isCancelled: isCancelled,
         completedAt: completedAt,
-        id: Number(note_id),
+        id: note_id,
         title: title,
         isDone: isDone,
         SubTaskList: taskList[noteIndex].SubTaskList,
@@ -161,6 +161,7 @@ const updateNote= async (req, res) => {
       });
     }
    } catch (error) {
+    console.log(error)
     res.status(500).json({ code: 500, message: "Internal server error" });
    }
 

@@ -1,5 +1,5 @@
 const { db } = require("./../configurations/admin");
-
+const { v4: uuidv4 } = require('uuid');
 const addSubNote=async (req, res) => {
     const subTaskTitle = req.body.title;
     const subTaskCreatedAt = req.body.createdAt;
@@ -14,11 +14,11 @@ const addSubNote=async (req, res) => {
       try {
          let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
         .task_list;
-  
+      
       const noteIndex = taskList.findIndex((note) => note.id == note_id);
-  
+      
       if (noteIndex !== -1) {
-        const subTaskId = taskList[noteIndex].SubTaskList.length + 1;
+        const subTaskId = uuidv4();
   
         taskList[noteIndex].SubTaskList.push({
           createdAt: subTaskCreatedAt,
@@ -83,11 +83,11 @@ const addSubNote=async (req, res) => {
           await db.collection("notes").doc(`${user_id}`).get()
         ).data().task_list;
   
-        const noteIndex = taskList.findIndex((note) => note.id === +note_id);
+        const noteIndex = taskList.findIndex((note) => note.id === note_id);
   
         if (noteIndex !== -1) {
           const subTaskIndex = taskList[noteIndex].SubTaskList.findIndex(
-            (subtask) => subtask.id === +subtask_id
+            (subtask) => subtask.id === subtask_id
           );
   
           if (subTaskIndex !== -1) {
@@ -95,7 +95,7 @@ const addSubNote=async (req, res) => {
               createdAt: subTaskCreatedAt,
               isCancelled: subTaskIsCancelled,
               completedAt: subTaskCompletedAt,
-              id: +subtask_id,
+              id: subtask_id,
               title: subTaskTitle,
               isDone: subTaskIsDone,
             };
@@ -147,11 +147,11 @@ const addSubNote=async (req, res) => {
     try {
      let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
       .task_list;
-    const noteIndex = taskList.findIndex((note) => note.id === +note_id);
+    const noteIndex = taskList.findIndex((note) => note.id === note_id);
    
     if (noteIndex !== -1) {
       let subTaskIndex = taskList[noteIndex].SubTaskList.findIndex(
-        (subTask) => subTask.id === +subtask_id
+        (subTask) => subTask.id === subtask_id
       );
   
       if (subTaskIndex !== -1) {

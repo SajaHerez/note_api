@@ -5,6 +5,6 @@ const router = Router()
 
 router.post('/signup', authController.singup)
     .post('/signin', authController.singin)
-    .get('/:user_id',authController.logout);
+    .get('/logout/:user_id',authController.logout);
 
 module.exports = router

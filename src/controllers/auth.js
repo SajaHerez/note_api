@@ -15,7 +15,7 @@ const singup= async (req, res) => {
       if (user.docs.length > 0) {
         res.json({ code: 400, message: "email already in use" });
       } else {
-        const userId = uuidv4();
+        const user_id = uuidv4();
         console.log(user_id);
         await users.add({
           email: email,
@@ -32,6 +32,7 @@ const singup= async (req, res) => {
       }
         
       } catch (error) {
+        console.log(error)
         res.status(500).json({ code: 500, message: "Server error" });
       }
       

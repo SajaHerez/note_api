@@ -28,7 +28,8 @@ const getNotes= async (req, res) => {
     const completedAt = req.body.completedAt;
     const isDone = JSON.parse(req.body.isDone);
     const isCancelled = JSON.parse(req.body.isCancelled);
-    const user_id = req.params["user_id"];
+    const user_id = req.params["user_id"];     
+    const noteId = uuidv4();
     if(user_id){
     if (title && createdAt ) {
       
@@ -37,9 +38,7 @@ const getNotes= async (req, res) => {
         await db.runTransaction(async (transaction) => {
           const doc = await transaction.get(userRef);
   
-          const taskList = doc.get("task_list") || [];
-  
-          const noteId = uuidv4();
+          const taskList = doc.get("task_list") || []; 
           const note = {
             createdAt: createdAt,
             isCancelled: isCancelled,
@@ -53,10 +52,18 @@ const getNotes= async (req, res) => {
   
           transaction.update(userRef, { task_list: taskList });
         });
-  
         return res.status(200).json({
           code: 200,
           message: "Note created successfully",
+          data: {
+            createdAt: createdAt,
+            isCancelled: isCancelled,
+            completedAt: completedAt,
+            id: noteId,
+            title: title,
+            isDone: isDone,
+            SubTaskList: [],
+          }
         });
       } catch (err) {
         console.error(err);

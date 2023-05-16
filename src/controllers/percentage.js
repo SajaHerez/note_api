@@ -85,15 +85,25 @@ const perceDailyNote =async(req,res)=>{
         let sum = 0;
         let counterOfCancelledNote=0;
         if(taskList.length>0){
-        taskList.forEach((note, index) => {
-          console.log(note.createdAt.substring(0,10) == todayDate)
-            if(note.createdAt.substring(0,10) == todayDate){
+          // note that have the sane date
+        let  sameDatelist=[]
+        taskList.forEach((note,i)=>{
+          if(note.createdAt.substring(0,10) == todayDate){
+            // push the note that have the same date to the list
+            sameDatelist.push(note);
+          }
+        })
+
+        if(sameDatelist.length>0){
+
+      sameDatelist.forEach((note, index) => {
                 if (!note.isCancelled) {
                     if (note.isDone) {
                         sum += 1;
+                        console.log("sum",sum)
                     } else {
                       if(note.SubTaskList.length>0){
-
+                   
                       const SubTaskList = note.SubTaskList;
                      let subSum = 0;
                       let counterOfCancelledSubNote=0;
@@ -102,6 +112,7 @@ const perceDailyNote =async(req,res)=>{
                         if(!subNote.isCancelled){
                         if (subNote.isDone) {
                             subSum += 1;
+                            console.log("subSum",subSum)
                         }
                     }else{
                        ++counterOfCancelledSubNote
@@ -109,15 +120,23 @@ const perceDailyNote =async(req,res)=>{
                       });
                         
                         sum+= subSum/(SubTaskList.length-counterOfCancelledSubNote)
+                        console.log(subSum/(SubTaskList.length-counterOfCancelledSubNote));
                     }
                     }
                   }else{
                     ++counterOfCancelledNote
                   }
-            }
+            
         })
 
-        percentage=sum/(taskList.length-counterOfCancelledNote)
+
+
+
+
+}
+
+        percentage=sum/(sameDatelist.length-counterOfCancelledNote)
+             console.log("sum/(sameDatelist.length-counterOfCancelledNote)",sum/(sameDatelist.length-counterOfCancelledNote))
         res
           .status(200)
           .json({

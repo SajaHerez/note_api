@@ -143,7 +143,7 @@ const updateNote= async (req, res) => {
     var noteIndex = taskList.findIndex((note) => note.id === note_id);
     console.log(noteIndex)
     if (noteIndex !== -1) {
-      taskList[noteIndex] = {
+      let noty= {
         createdAt: createdAt,
         isCancelled: isCancelled,
         completedAt: completedAt,
@@ -152,6 +152,7 @@ const updateNote= async (req, res) => {
         isDone: isDone,
         SubTaskList: taskList[noteIndex].SubTaskList,
       };
+      taskList[noteIndex] = noty
 
       await db.collection("notes").doc(`${user_id}`).update({
         task_list: taskList,
@@ -160,6 +161,7 @@ const updateNote= async (req, res) => {
       res.status(200).json({
         code: 200,
         message: "note updated successfully",
+        data:noty
       });
     } else {
       res.status(404).json({

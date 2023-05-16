@@ -10,40 +10,52 @@ const completedNote =async (req, res) => {
         var percentage=0;
         let sum = 0;
         let counterOfCancelledNote=0;
+        if(taskList.length>0){
       taskList.forEach((note, index) => {
-        
+      
         if (!note.isCancelled) {
+        
           if (note.isDone) {
-              sum += 1;
+       
+              sum += 1;  
+                 
           } else {
+            if(note.SubTaskList.length>0){
             const SubTaskList = note.SubTaskList;
+           
            let subSum = 0;
             let counterOfCancelledSubNote=0;
             SubTaskList.forEach((subNote, index) => {
-              if(!note.isCancelled){
+             
+              if(!subNote.isCancelled){
               if (subNote.isDone) {
                   subSum += 1;
+                 
               }
           }else{
              ++counterOfCancelledSubNote
+            
           }
             });
               
               sum+= subSum/(SubTaskList.length-counterOfCancelledSubNote)
+              
           }
-        }else{
+       } }else{
           ++counterOfCancelledNote
         }
             
       });
       percentage=sum/(taskList.length-counterOfCancelledNote)
+     
       res
         .status(200)
         .json({
           percentage: percentage,
          
-        });
+        });}
       } catch (error) {
+        console.log(error)
         res.status(500).json({ code: 500, message: "Server error" });
 
       }
@@ -67,23 +79,27 @@ const perceDailyNote =async(req,res)=>{
     if (user_id) {
         if(todayDate){
           try {
-         let taskList = (await db.collection("notes").doc(`${user_id}`).get()).data()
-        .task_list;
+            const snapshot = await db.collection("notes").doc(user_id).get();
+            const taskList = snapshot.data().task_list;
         var percentage=0;
         let sum = 0;
         let counterOfCancelledNote=0;
-
+        if(taskList.length>0){
         taskList.forEach((note, index) => {
-            if(note.createdAt.substring(0,10) === todayDate){
+          console.log(note.createdAt.substring(0,10) == todayDate)
+            if(note.createdAt.substring(0,10) == todayDate){
                 if (!note.isCancelled) {
                     if (note.isDone) {
                         sum += 1;
                     } else {
+                      if(note.SubTaskList.length>0){
+
                       const SubTaskList = note.SubTaskList;
                      let subSum = 0;
                       let counterOfCancelledSubNote=0;
+
                       SubTaskList.forEach((subNote, index) => {
-                        if(!note.isCancelled){
+                        if(!subNote.isCancelled){
                         if (subNote.isDone) {
                             subSum += 1;
                         }
@@ -93,6 +109,7 @@ const perceDailyNote =async(req,res)=>{
                       });
                         
                         sum+= subSum/(SubTaskList.length-counterOfCancelledSubNote)
+                    }
                     }
                   }else{
                     ++counterOfCancelledNote
@@ -107,7 +124,9 @@ const perceDailyNote =async(req,res)=>{
             percentage: percentage,
            
           });
+        }
           } catch (error) {
+            console.log(error)
             res.status(500).json({ code: 500, message: "Server error" });
     
           }
